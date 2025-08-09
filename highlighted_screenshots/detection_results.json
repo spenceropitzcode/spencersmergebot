@@ -1,0 +1,120 @@
+{
+  "detection_summary": {
+    "timestamp": "2025-08-09T13:46:37.052704",
+    "total_screenshots": 4,
+    "total_matches": 2,
+    "threshold_used": 0.6
+  },
+  "results": [
+    {
+      "screenshot": "mega_knight_affordable.png",
+      "timestamp": "2025-08-09T13:46:36.805096",
+      "image_size": {
+        "width": 705,
+        "height": 1261
+      },
+      "icons_detected": [
+        {
+          "icon_name": "mega_knight",
+          "template_size": {
+            "width": 418,
+            "height": 515
+          },
+          "best_confidence": 0.7009533047676086,
+          "matches_found": 1,
+          "matches": [
+            {
+              "x": 358,
+              "y": 1097,
+              "width": 107,
+              "height": 132,
+              "center_x": 411,
+              "center_y": 1163,
+              "confidence": 0.7009533047676086,
+              "scale": 0.2571428571428572
+            }
+          ]
+        }
+      ],
+      "highlighted_image": "detected_mega_knight_affordable.png",
+      "total_matches": 1
+    },
+    {
+      "screenshot": "mega_knight_unaffordable.png",
+      "timestamp": "2025-08-09T13:46:36.886361",
+      "image_size": {
+        "width": 710,
+        "height": 1263
+      },
+      "icons_detected": [
+        {
+          "icon_name": "mega_knight",
+          "template_size": {
+            "width": 418,
+            "height": 515
+          },
+          "best_confidence": 0.6070528030395508,
+          "matches_found": 1,
+          "matches": [
+            {
+              "x": 247,
+              "y": 1097,
+              "width": 107,
+              "height": 132,
+              "center_x": 300,
+              "center_y": 1163,
+              "confidence": 0.6070528030395508,
+              "scale": 0.2571428571428572
+            }
+          ]
+        }
+      ],
+      "highlighted_image": "detected_mega_knight_unaffordable.png",
+      "total_matches": 1
+    },
+    {
+      "screenshot": "pekka_affordable_upgrade.png",
+      "timestamp": "2025-08-09T13:46:36.966436",
+      "image_size": {
+        "width": 709,
+        "height": 1258
+      },
+      "icons_detected": [
+        {
+          "icon_name": "mega_knight",
+          "template_size": {
+            "width": 418,
+            "height": 515
+          },
+          "best_confidence": 0.386115700006485,
+          "matches_found": 0,
+          "matches": []
+        }
+      ],
+      "highlighted_image": null,
+      "total_matches": 0
+    },
+    {
+      "screenshot": "pekka_unaffordable_upgrade.png",
+      "timestamp": "2025-08-09T13:46:37.017032",
+      "image_size": {
+        "width": 709,
+        "height": 1264
+      },
+      "icons_detected": [
+        {
+          "icon_name": "mega_knight",
+          "template_size": {
+            "width": 418,
+            "height": 515
+          },
+          "best_confidence": 0.4283362030982971,
+          "matches_found": 0,
+          "matches": []
+        }
+      ],
+      "highlighted_image": null,
+      "total_matches": 0
+    }
+  ]
+}
