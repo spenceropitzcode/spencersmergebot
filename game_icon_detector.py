@@ -249,7 +249,7 @@ class GameIconDetector:
         
         return filtered_matches
     
-    def highlight_matches(self, image, matches, color=(0, 255, 0), thickness=3):
+    def highlight_matches(self, image, matches, color=(0, 255, 0), thickness=3, icon_name=""):
         """Draw rectangles and labels around found matches."""
         highlighted_image = image.copy()
         
@@ -264,12 +264,12 @@ class GameIconDetector:
             center_x, center_y = match['center_x'], match['center_y']
             cv2.circle(highlighted_image, (center_x, center_y), 8, (0, 0, 255), -1)
             
-            # Add match number and confidence
-            label = f"{i+1}: {confidence:.2f}"
+            # Add icon name and confidence
+            label = f"{icon_name}: {confidence:.2f}"
             cv2.putText(highlighted_image, label, 
-                       (x + 5, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+                       (x + 5, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 2)
             cv2.putText(highlighted_image, label, 
-                       (x + 5, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 1)
+                       (x + 5, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.4, color, 1)
         
         return highlighted_image
     
@@ -332,7 +332,7 @@ class GameIconDetector:
                     for i, match in enumerate(matches):
                         print(f"  Match {i+1}: Center ({match['center_x']}, {match['center_y']}), Size {match['width']}x{match['height']}, Confidence {match['confidence']:.3f}")
                     color = colors[icon_idx % len(colors)]
-                    highlighted_image = self.highlight_matches(highlighted_image, matches, color)
+                    highlighted_image = self.highlight_matches(highlighted_image, matches, color, icon_name=icon_name)
                     total_matches += len(matches)
                     screenshot_result['icons_detected'].append(icon_result)
                 else:
@@ -391,9 +391,9 @@ def main():
     """Main function to run the icon detector."""
     try:
         detector = GameIconDetector(
-            threshold=0.65,
+            threshold=0.75,
             search_bottom_fraction=0.3,
-            ignore_top_right_fraction=0.2,
+            ignore_top_right_fraction=0,
             use_preprocessing=True  # Enable preprocessing for grayed-out icons
         )
         detector.process_all_screenshots()

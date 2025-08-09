@@ -1,0 +1,6 @@
+# Requirements for Live Icon Overlay
+pyautogui>=0.9.54
+pillow>=8.0.0
+opencv-python>=4.5.0
+numpy>=1.21.0
+pywin32>=227  # For Windows click-through overlay (optional)
