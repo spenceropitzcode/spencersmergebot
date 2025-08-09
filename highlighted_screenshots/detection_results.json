@@ -1,120 +1,579 @@
 {
   "detection_summary": {
-    "timestamp": "2025-08-09T13:46:37.052704",
+    "timestamp": "2025-08-09T15:07:06.367778",
     "total_screenshots": 4,
-    "total_matches": 2,
-    "threshold_used": 0.6
+    "total_matches": 11,
+    "threshold_used": 0.65
   },
   "results": [
     {
       "screenshot": "mega_knight_affordable.png",
-      "timestamp": "2025-08-09T13:46:36.805096",
+      "timestamp": "2025-08-09T15:06:59.548039",
       "image_size": {
         "width": 705,
         "height": 1261
       },
       "icons_detected": [
         {
+          "icon_name": "pekka",
+          "best_confidence": 0.40915393829345703,
+          "matches_found": 0
+        },
+        {
           "icon_name": "mega_knight",
           "template_size": {
-            "width": 418,
-            "height": 515
+            "width": 349,
+            "height": 448
           },
-          "best_confidence": 0.7009533047676086,
+          "best_confidence": 0.7746580243110657,
           "matches_found": 1,
           "matches": [
             {
-              "x": 358,
-              "y": 1097,
-              "width": 107,
-              "height": 132,
-              "center_x": 411,
-              "center_y": 1163,
-              "confidence": 0.7009533047676086,
-              "scale": 0.2571428571428572
+              "x": 368,
+              "y": 1104,
+              "width": 95,
+              "height": 123,
+              "center_x": 415,
+              "center_y": 1165,
+              "confidence": 0.7746580243110657,
+              "scale": 0.2746811224489796
+            }
+          ]
+        },
+        {
+          "icon_name": "knight",
+          "best_confidence": 0.48262640833854675,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "archer",
+          "template_size": {
+            "width": 69,
+            "height": 89
+          },
+          "best_confidence": 0.7451552748680115,
+          "matches_found": 1,
+          "matches": [
+            {
+              "x": 144,
+              "y": 1105,
+              "width": 93,
+              "height": 121,
+              "center_x": 190,
+              "center_y": 1165,
+              "confidence": 0.7451552748680115,
+              "scale": 1.3617977528089886
+            }
+          ]
+        },
+        {
+          "icon_name": "goblin",
+          "best_confidence": 0.576530396938324,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "skeleton_king",
+          "best_confidence": 0.5198043584823608,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "archer_queen",
+          "best_confidence": 0.5201687216758728,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "bandit",
+          "best_confidence": 0.5141319632530212,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "barbarian",
+          "best_confidence": 0.5161682367324829,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "bomber",
+          "best_confidence": 0.5292326211929321,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "dart_goblin",
+          "best_confidence": 0.5213000178337097,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "executioner",
+          "best_confidence": 0.589341402053833,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "giant_skeleton",
+          "best_confidence": 0.5305089354515076,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "goblin_machine",
+          "template_size": {
+            "width": 72,
+            "height": 92
+          },
+          "best_confidence": 0.8611438274383545,
+          "matches_found": 1,
+          "matches": [
+            {
+              "x": 255,
+              "y": 1105,
+              "width": 94,
+              "height": 121,
+              "center_x": 302,
+              "center_y": 1165,
+              "confidence": 0.8611438274383545,
+              "scale": 1.3173913043478263
             }
           ]
         }
       ],
       "highlighted_image": "detected_mega_knight_affordable.png",
-      "total_matches": 1
+      "total_matches": 3
     },
     {
       "screenshot": "mega_knight_unaffordable.png",
-      "timestamp": "2025-08-09T13:46:36.886361",
+      "timestamp": "2025-08-09T15:07:00.927269",
       "image_size": {
         "width": 710,
         "height": 1263
       },
       "icons_detected": [
         {
+          "icon_name": "pekka",
+          "best_confidence": 0.4189240038394928,
+          "matches_found": 0
+        },
+        {
           "icon_name": "mega_knight",
           "template_size": {
-            "width": 418,
-            "height": 515
+            "width": 349,
+            "height": 448
           },
-          "best_confidence": 0.6070528030395508,
+          "best_confidence": 0.6523159146308899,
           "matches_found": 1,
           "matches": [
             {
-              "x": 247,
-              "y": 1097,
-              "width": 107,
-              "height": 132,
-              "center_x": 300,
-              "center_y": 1163,
-              "confidence": 0.6070528030395508,
-              "scale": 0.2571428571428572
+              "x": 257,
+              "y": 1104,
+              "width": 95,
+              "height": 123,
+              "center_x": 304,
+              "center_y": 1165,
+              "confidence": 0.6523159146308899,
+              "scale": 0.2746811224489796
+            }
+          ]
+        },
+        {
+          "icon_name": "knight",
+          "best_confidence": 0.47736403346061707,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "archer",
+          "best_confidence": 0.4938424825668335,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "goblin",
+          "best_confidence": 0.5684590339660645,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "skeleton_king",
+          "best_confidence": 0.4989749789237976,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "archer_queen",
+          "template_size": {
+            "width": 72,
+            "height": 92
+          },
+          "best_confidence": 0.7255861759185791,
+          "matches_found": 1,
+          "matches": [
+            {
+              "x": 371,
+              "y": 1105,
+              "width": 94,
+              "height": 121,
+              "center_x": 418,
+              "center_y": 1165,
+              "confidence": 0.7255861759185791,
+              "scale": 1.3173913043478263
+            }
+          ]
+        },
+        {
+          "icon_name": "bandit",
+          "best_confidence": 0.4788721203804016,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "barbarian",
+          "best_confidence": 0.5137106776237488,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "bomber",
+          "best_confidence": 0.5190638303756714,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "dart_goblin",
+          "best_confidence": 0.5144510269165039,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "executioner",
+          "best_confidence": 0.5958055257797241,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "giant_skeleton",
+          "best_confidence": 0.5309043526649475,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "goblin_machine",
+          "best_confidence": 0.5601457953453064,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "golden_knight",
+          "best_confidence": 0.5449658632278442,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "prince",
+          "best_confidence": 0.4682730436325073,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "princess",
+          "best_confidence": 0.5044015645980835,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "royal_ghost",
+          "template_size": {
+            "width": 71,
+            "height": 92
+          },
+          "best_confidence": 0.8386483192443848,
+          "matches_found": 1,
+          "matches": [
+            {
+              "x": 145,
+              "y": 1106,
+              "width": 93,
+              "height": 121,
+              "center_x": 191,
+              "center_y": 1166,
+              "confidence": 0.8386483192443848,
+              "scale": 1.3173913043478263
             }
           ]
         }
       ],
       "highlighted_image": "detected_mega_knight_unaffordable.png",
-      "total_matches": 1
+      "total_matches": 3
     },
     {
       "screenshot": "pekka_affordable_upgrade.png",
-      "timestamp": "2025-08-09T13:46:36.966436",
+      "timestamp": "2025-08-09T15:07:02.708888",
       "image_size": {
         "width": 709,
         "height": 1258
       },
       "icons_detected": [
         {
-          "icon_name": "mega_knight",
+          "icon_name": "pekka",
           "template_size": {
-            "width": 418,
-            "height": 515
+            "width": 73,
+            "height": 90
           },
-          "best_confidence": 0.386115700006485,
-          "matches_found": 0,
-          "matches": []
+          "best_confidence": 0.709477961063385,
+          "matches_found": 1,
+          "matches": [
+            {
+              "x": 254,
+              "y": 1107,
+              "width": 98,
+              "height": 120,
+              "center_x": 303,
+              "center_y": 1167,
+              "confidence": 0.709477961063385,
+              "scale": 1.3433333333333335
+            }
+          ]
+        },
+        {
+          "icon_name": "mega_knight",
+          "best_confidence": 0.4937591552734375,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "knight",
+          "best_confidence": 0.4924199879169464,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "archer",
+          "best_confidence": 0.4854385256767273,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "goblin",
+          "template_size": {
+            "width": 72,
+            "height": 91
+          },
+          "best_confidence": 0.8783555030822754,
+          "matches_found": 1,
+          "matches": [
+            {
+              "x": 143,
+              "y": 1106,
+              "width": 95,
+              "height": 120,
+              "center_x": 190,
+              "center_y": 1166,
+              "confidence": 0.8783555030822754,
+              "scale": 1.3285714285714287
+            }
+          ]
+        },
+        {
+          "icon_name": "skeleton_king",
+          "best_confidence": 0.5105053782463074,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "archer_queen",
+          "best_confidence": 0.4984576404094696,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "bandit",
+          "best_confidence": 0.5072670578956604,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "barbarian",
+          "best_confidence": 0.5152395367622375,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "bomber",
+          "best_confidence": 0.5193728804588318,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "dart_goblin",
+          "best_confidence": 0.5148454308509827,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "executioner",
+          "best_confidence": 0.5914381742477417,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "giant_skeleton",
+          "best_confidence": 0.5195427536964417,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "goblin_machine",
+          "best_confidence": 0.5632207989692688,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "golden_knight",
+          "best_confidence": 0.5441371202468872,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "prince",
+          "best_confidence": 0.4305587112903595,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "princess",
+          "template_size": {
+            "width": 71,
+            "height": 92
+          },
+          "best_confidence": 0.6734248995780945,
+          "matches_found": 1,
+          "matches": [
+            {
+              "x": 371,
+              "y": 1107,
+              "width": 93,
+              "height": 120,
+              "center_x": 417,
+              "center_y": 1167,
+              "confidence": 0.6734248995780945,
+              "scale": 1.3141304347826086
+            }
+          ]
         }
       ],
-      "highlighted_image": null,
-      "total_matches": 0
+      "highlighted_image": "detected_pekka_affordable_upgrade.png",
+      "total_matches": 3
     },
     {
       "screenshot": "pekka_unaffordable_upgrade.png",
-      "timestamp": "2025-08-09T13:46:37.017032",
+      "timestamp": "2025-08-09T15:07:04.386332",
       "image_size": {
         "width": 709,
         "height": 1264
       },
       "icons_detected": [
         {
+          "icon_name": "pekka",
+          "best_confidence": 0.4302242398262024,
+          "matches_found": 0
+        },
+        {
           "icon_name": "mega_knight",
+          "best_confidence": 0.4969000816345215,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "knight",
           "template_size": {
-            "width": 418,
-            "height": 515
+            "width": 72,
+            "height": 92
           },
-          "best_confidence": 0.4283362030982971,
-          "matches_found": 0,
-          "matches": []
+          "best_confidence": 0.7631710767745972,
+          "matches_found": 1,
+          "matches": [
+            {
+              "x": 146,
+              "y": 1108,
+              "width": 95,
+              "height": 121,
+              "center_x": 193,
+              "center_y": 1168,
+              "confidence": 0.7631710767745972,
+              "scale": 1.3206521739130435
+            }
+          ]
+        },
+        {
+          "icon_name": "archer",
+          "best_confidence": 0.4875330626964569,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "goblin",
+          "best_confidence": 0.6146832704544067,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "skeleton_king",
+          "template_size": {
+            "width": 72,
+            "height": 91
+          },
+          "best_confidence": 0.704868495464325,
+          "matches_found": 1,
+          "matches": [
+            {
+              "x": 372,
+              "y": 1107,
+              "width": 96,
+              "height": 121,
+              "center_x": 420,
+              "center_y": 1167,
+              "confidence": 0.704868495464325,
+              "scale": 1.3351648351648353
+            }
+          ]
+        },
+        {
+          "icon_name": "archer_queen",
+          "best_confidence": 0.47858941555023193,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "bandit",
+          "best_confidence": 0.4818525016307831,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "barbarian",
+          "best_confidence": 0.5239509344100952,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "bomber",
+          "best_confidence": 0.5192537903785706,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "dart_goblin",
+          "best_confidence": 0.5175652503967285,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "executioner",
+          "best_confidence": 0.5986458659172058,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "giant_skeleton",
+          "best_confidence": 0.4849850833415985,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "goblin_machine",
+          "best_confidence": 0.5619524121284485,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "golden_knight",
+          "best_confidence": 0.5463809967041016,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "prince",
+          "best_confidence": 0.4683002531528473,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "princess",
+          "best_confidence": 0.4786736071109772,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "royal_ghost",
+          "best_confidence": 0.524424135684967,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "spear_goblin",
+          "best_confidence": 0.41818174719810486,
+          "matches_found": 0
+        },
+        {
+          "icon_name": "valkyrie",
+          "best_confidence": 0.5268827080726624,
+          "matches_found": 0
         }
       ],
-      "highlighted_image": null,
-      "total_matches": 0
+      "highlighted_image": "detected_pekka_unaffordable_upgrade.png",
+      "total_matches": 2
     }
   ]
 }

@@ -18,7 +18,8 @@ from datetime import datetime
 
 class GameIconDetector:
     def __init__(self, icons_dir="market_icons", screenshots_dir="test_game_screenshots", 
-                 output_dir="highlighted_screenshots", threshold=0.6, search_bottom_fraction=0.25):
+                 output_dir="highlighted_screenshots", threshold=0.6, search_bottom_fraction=0.25,
+                 ignore_top_right_fraction=0.2, use_preprocessing=True):
         """
         Initialize the Game Icon Detector.
         
@@ -28,18 +29,59 @@ class GameIconDetector:
             output_dir (str): Directory to save highlighted images
             threshold (float): Confidence threshold for matches (0.0 to 1.0)
             search_bottom_fraction (float): Fraction of image to search from bottom (0.25 = bottom quarter)
+            ignore_top_right_fraction (float): Fraction of template to mask in top-right corner (0.0 to 1.0)
+            use_preprocessing (bool): Whether to use histogram equalization for grayed-out icons
         """
         self.icons_dir = Path(icons_dir)
         self.screenshots_dir = Path(screenshots_dir)
         self.output_dir = Path(output_dir)
         self.threshold = threshold
         self.search_bottom_fraction = search_bottom_fraction
+        self.ignore_top_right_fraction = ignore_top_right_fraction
+        self.use_preprocessing = use_preprocessing
         self.results = []
         
         # Create output directory if it doesn't exist
         self.output_dir.mkdir(exist_ok=True)
     
-    def find_matches_multiscale(self, main_image, template_image, scale_range=(0.2, 1.0), scale_steps=15):
+    def prioritize_icon_search(self, icon_files):
+        """
+        Prioritize icon search order - put likely icons first for faster detection.
+        """
+        # Priority list - put important icons first
+        priority_names = ['pekka', 'mega_knight', 'knight', 'archer', 'goblin', 'skeleton_king']
+        
+        priority_files = []
+        remaining_files = []
+        
+        # First, add priority icons in order
+        for priority_name in priority_names:
+            for icon_file in icon_files:
+                if icon_file.stem == priority_name:
+                    priority_files.append(icon_file)
+                    break
+        
+        # Then add remaining icons
+        for icon_file in icon_files:
+            if icon_file not in priority_files:
+                remaining_files.append(icon_file)
+        
+        return priority_files + remaining_files
+    
+    def get_adaptive_scale_range(self, template_image, search_region):
+        """
+        Calculate adaptive scale range based on template and search region sizes.
+        """
+        template_h, template_w = template_image.shape[:2]
+        search_h, search_w = search_region.shape[:2]
+        
+        # Calculate reasonable scale bounds based on sizes
+        min_scale = max(0.1, 15.0 / max(template_w, template_h))  # Minimum 15px icons
+        max_scale = min(3.0, min(search_w * 0.6 / template_w, search_h * 0.6 / template_h))  # Max 60% of search area
+        
+        return (min_scale, max_scale)
+    
+    def find_matches_multiscale(self, main_image, template_image, scale_range=(0.1, 2.0), scale_steps=15):
         """
         Find template matches using multi-scale template matching.
         
@@ -47,7 +89,7 @@ class GameIconDetector:
             main_image: The main screenshot image (BGR format)
             template_image: The template/icon to search for (BGR format)
             scale_range: Tuple of (min_scale, max_scale) to try
-            scale_steps: Number of scale levels to test
+            scale_steps: Number of scale levels to test (reduced for speed)
         
         Returns:
             List of dictionaries containing match information
@@ -59,23 +101,40 @@ class GameIconDetector:
         # Crop image to search region only
         search_region = main_image[search_start_y:, :]
         
-        print(f"      Original image size: {main_image.shape[1]}x{main_image.shape[0]}")
-        print(f"      Search region size: {search_region.shape[1]}x{search_region.shape[0]} (bottom {self.search_bottom_fraction*100:.0f}%)")
-        print(f"      Search region starts at y={search_start_y}")
+        # Get adaptive scale range based on template and search region sizes
+        if scale_range == (0.1, 2.0):  # Use default adaptive scaling
+            scale_range = self.get_adaptive_scale_range(template_image, search_region)
         
-        # Convert images to grayscale for template matching
+    # Logging suppressed: only show near matches
+        
+        # Convert main image to grayscale once (outside loop for speed)
         main_gray = cv2.cvtColor(search_region, cv2.COLOR_BGR2GRAY)
         template_gray = cv2.cvtColor(template_image, cv2.COLOR_BGR2GRAY)
+        
+        # Normalize both images to handle grayed-out/unaffordable icons
+        if self.use_preprocessing:
+            # Apply histogram equalization to improve matching between normal and grayed icons
+            main_gray = cv2.equalizeHist(main_gray)
+            template_gray = cv2.equalizeHist(template_gray)
+        
+        # Alternative: normalize brightness and contrast
+        # main_gray = cv2.normalize(main_gray, None, 0, 255, cv2.NORM_MINMAX)
+        # template_gray = cv2.normalize(template_gray, None, 0, 255, cv2.NORM_MINMAX)
         
         # Get original template dimensions
         template_height, template_width = template_gray.shape
         
         all_matches = []
         best_confidence = 0
+        found_good_match = False  # Track if we found a good match early
         
-        # Generate scale factors
+        # Generate scale factors - use more fine-grained scaling for better detection
         min_scale, max_scale = scale_range
-        scales = np.linspace(min_scale, max_scale, scale_steps)
+        # Reduce scale steps for speed - fewer steps but still good coverage
+        scales_coarse = np.linspace(min_scale, max_scale, 15)  # Reduced from 25
+        scales_fine = np.linspace(0.4, 1.0, 8)  # Reduced and narrowed range
+        scales = np.unique(np.concatenate([scales_coarse, scales_fine]))
+        scales = np.sort(scales)
         
         for scale in scales:
             # Calculate new dimensions
@@ -83,13 +142,21 @@ class GameIconDetector:
             new_height = int(template_height * scale)
             
             # Skip if template becomes too small or too large
-            if new_width < 10 or new_height < 10:
+            if new_width < 8 or new_height < 8:  # Allow smaller icons
                 continue
-            if new_width > search_region.shape[1] or new_height > search_region.shape[0]:
+            if new_width > search_region.shape[1] * 0.8 or new_height > search_region.shape[0] * 0.8:  # Allow larger but not overwhelming
                 continue
             
             # Resize template
             template_scaled = cv2.resize(template_gray, (new_width, new_height))
+            
+            # Mask out top-right corner of template if specified
+            if self.ignore_top_right_fraction > 0:
+                th, tw = template_scaled.shape
+                mask_h = int(th * self.ignore_top_right_fraction)
+                mask_w = int(tw * self.ignore_top_right_fraction)
+                # Zero out top-right region to ignore obstructed parts
+                template_scaled[0:mask_h, tw-mask_w:tw] = 0
             
             # Perform template matching on the cropped region
             result = cv2.matchTemplate(main_gray, template_scaled, cv2.TM_CCOEFF_NORMED)
@@ -99,6 +166,16 @@ class GameIconDetector:
             
             if max_val > best_confidence:
                 best_confidence = max_val
+            
+            # Early exit optimization: if we found good matches, reduce remaining scales
+            if best_confidence >= self.threshold and len(all_matches) >= 1:
+                # For single icon detection, if we found a good match, we can exit early
+                if best_confidence > self.threshold * 1.2:  # Very confident match
+                    break
+                # Skip some remaining scales for speed once we have good matches
+                remaining_scales = scales[scales > scale]
+                if len(remaining_scales) > 3:
+                    scales = np.concatenate([scales[scales <= scale], remaining_scales[::2]])
             
             # Find all matches above threshold for this scale
             if max_val >= self.threshold:
@@ -124,12 +201,17 @@ class GameIconDetector:
                     }
                     all_matches.append(match_info)
         
-        # Remove overlapping matches
+        # Remove overlapping matches - limit to 1 per icon since each can only appear once
         filtered_matches = self._remove_overlapping_matches(all_matches)
+        
+        # For single icon detection, return only the best match
+        if filtered_matches:
+            best_match = max(filtered_matches, key=lambda x: x['confidence'])
+            return [best_match], best_confidence
         
         return filtered_matches, best_confidence
     
-    def _remove_overlapping_matches(self, matches, overlap_threshold=0.3):
+    def _remove_overlapping_matches(self, matches, overlap_threshold=0.2):
         """Remove overlapping matches, keeping the highest confidence ones."""
         if not matches:
             return matches
@@ -193,97 +275,98 @@ class GameIconDetector:
     
     def process_all_screenshots(self):
         """Process all screenshots and detect icons."""
-        # Get all icon templates
+        # Get all icon templates and prioritize search order
         icon_files = list(self.icons_dir.glob("*.png"))
         if not icon_files:
-            print("No icon files found in market_icons directory!")
             return
+        icon_files = self.prioritize_icon_search(icon_files)  # Optimize search order
         
-        # Get all screenshot files
         screenshot_files = list(self.screenshots_dir.glob("*.png"))
         if not screenshot_files:
-            print("No screenshot files found in test_game_screenshots directory!")
             return
-        
-        print(f"Found {len(icon_files)} icon templates and {len(screenshot_files)} screenshots")
-        print("=" * 80)
         
         # Process each screenshot
         for screenshot_file in screenshot_files:
-            print(f"\nProcessing: {screenshot_file.name}")
-            
             # Load the screenshot
             main_image = cv2.imread(str(screenshot_file))
             if main_image is None:
-                print(f"  Error: Could not load {screenshot_file}")
                 continue
-            
             screenshot_result = {
                 'screenshot': screenshot_file.name,
                 'timestamp': datetime.now().isoformat(),
                 'image_size': {'width': main_image.shape[1], 'height': main_image.shape[0]},
                 'icons_detected': []
             }
-            
             highlighted_image = main_image.copy()
             total_matches = 0
-            
-            # Search for each icon template
             colors = [(0, 255, 0), (255, 0, 0), (0, 0, 255), (255, 255, 0), (255, 0, 255)]
+            found_icons = set()  # Track which icons we've already found
             
             for icon_idx, icon_file in enumerate(icon_files):
+                # Early exit: stop if we've found 3 icons (max per picture)
+                # But ensure we process all priority icons first
+                if total_matches >= 3:
+                    priority_names = ['pekka', 'mega_knight', 'knight', 'archer', 'goblin', 'skeleton_king']
+                    if icon_file.stem not in priority_names:
+                        print(f"✓ Found maximum 3 icons, skipping non-priority templates")
+                        break
+                    
                 icon_name = icon_file.stem
-                print(f"  Searching for {icon_name}...")
-                
                 # Load the template
                 template_image = cv2.imread(str(icon_file))
                 if template_image is None:
-                    print(f"    Error: Could not load template {icon_file}")
                     continue
-                
-                # Find matches
                 matches, best_confidence = self.find_matches_multiscale(main_image, template_image)
                 
-                icon_result = {
-                    'icon_name': icon_name,
-                    'template_size': {'width': template_image.shape[1], 'height': template_image.shape[0]},
-                    'best_confidence': float(best_confidence),
-                    'matches_found': len(matches),
-                    'matches': matches
-                }
-                
+                # Only create detailed JSON object if matches were found (speed optimization)
                 if matches:
-                    print(f"    ✓ Found {len(matches)} match(es):")
+                    found_icons.add(icon_name)  # Mark this icon as found
+                    icon_result = {
+                        'icon_name': icon_name,
+                        'template_size': {'width': template_image.shape[1], 'height': template_image.shape[0]},
+                        'best_confidence': float(best_confidence),
+                        'matches_found': len(matches),
+                        'matches': matches
+                    }
+                    print(f"✓ {icon_name}: {len(matches)} match(es)")
                     for i, match in enumerate(matches):
-                        print(f"      Match {i+1}: Center ({match['center_x']}, {match['center_y']}), "
-                              f"Size {match['width']}x{match['height']}, Confidence {match['confidence']:.3f}")
-                    
-                    # Highlight matches
+                        print(f"  Match {i+1}: Center ({match['center_x']}, {match['center_y']}), Size {match['width']}x{match['height']}, Confidence {match['confidence']:.3f}")
                     color = colors[icon_idx % len(colors)]
                     highlighted_image = self.highlight_matches(highlighted_image, matches, color)
                     total_matches += len(matches)
+                    screenshot_result['icons_detected'].append(icon_result)
                 else:
-                    print(f"    ✗ No matches found (best confidence: {best_confidence:.3f})")
-                
-                screenshot_result['icons_detected'].append(icon_result)
-            
-            # Save results
+                    # Always record results for priority icons or when we have < 3 matches
+                    priority_names = ['pekka', 'mega_knight', 'knight', 'archer', 'goblin', 'skeleton_king']
+                    should_record = (icon_name in priority_names or 
+                                   total_matches < 3 or 
+                                   best_confidence > self.threshold * 0.7)
+                    
+                    print(f"✗ {icon_name}: No matches (best: {best_confidence:.3f})")
+                    
+                    if should_record:
+                        screenshot_result['icons_detected'].append({
+                            'icon_name': icon_name,
+                            'best_confidence': float(best_confidence),
+                            'matches_found': 0
+                        })
             if total_matches > 0:
                 output_filename = f"detected_{screenshot_file.name}"
                 output_path = self.output_dir / output_filename
                 cv2.imwrite(str(output_path), highlighted_image)
-                print(f"  → Saved highlighted image: {output_filename}")
+                print(f"→ Saved highlighted image: {output_filename}")
                 screenshot_result['highlighted_image'] = output_filename
             else:
-                print(f"  → No matches found, skipping image save")
                 screenshot_result['highlighted_image'] = None
-            
             screenshot_result['total_matches'] = total_matches
             self.results.append(screenshot_result)
         
-        # Save JSON results
-        self.save_results()
-        print(f"\nProcessing complete! Results saved to detection_results.json")
+        # Save JSON results only if matches were found (speed optimization)
+        if any(r['total_matches'] > 0 for r in self.results):
+            self.save_results()
+            print(f"\nProcessing complete! Results saved to detection_results.json")
+        else:
+            print(f"\nProcessing complete! No matches found, skipping JSON save.")
     
     def save_results(self):
         """Save detection results to JSON file."""
@@ -302,33 +385,22 @@ class GameIconDetector:
         with open(results_file, 'w') as f:
             json.dump(summary, f, indent=2)
         
-        print(f"Results saved to: {results_file}")
+    # Logging suppressed
 
 def main():
     """Main function to run the icon detector."""
-    print("Game Icon Detector - Multi-Scale Template Matching")
-    print("=" * 80)
-    
     try:
-        # Check OpenCV
-        print(f"OpenCV version: {cv2.__version__}")
-        print(f"Working directory: {os.getcwd()}")
-          # Create detector instance
         detector = GameIconDetector(
-            threshold=0.6,  # Confidence threshold
-            search_bottom_fraction=0.25,  # Search only bottom 25% of screenshots for faster performance
+            threshold=0.65,
+            search_bottom_fraction=0.3,
+            ignore_top_right_fraction=0.2,
+            use_preprocessing=True  # Enable preprocessing for grayed-out icons
         )
-        
-        # Process all screenshots
         detector.process_all_screenshots()
-        
     except Exception as e:
         print(f"Error: {e}")
         import traceback
         traceback.print_exc()
 
 if __name__ == "__main__":
-    print("Starting Game Icon Detector...")
-    import sys
-    sys.stdout.flush()
     main()

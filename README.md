@@ -7,9 +7,7 @@ I have successfully created a Python program that uses OpenCV's template matchin
 
 ### Core Program
 - **`game_icon_detector.py`** - Main icon detection program
-- **`capturescreen.py`** - Screenshot capture utility
 - **`README.md`** - Complete documentation
-- **`ADDING_ICONS.md`** - Guide for adding new icons
 
 ### Data Directories
 - **`market_icons/`** - Contains icon templates (PNG files)
