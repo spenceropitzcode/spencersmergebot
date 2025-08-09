@@ -1,146 +1,168 @@
-# Game Icon Detection System - Complete
+# Game Icon Detection System
 
 ## Overview
-I have successfully created a Python program that uses OpenCV's template matching to find icons from the `market_icons` folder in game screenshots. The system uses multi-scale template matching to handle icons that appear at different sizes in the screenshots.
+A complete Python-based game icon detection system with both static analysis and real-time overlay capabilities. Uses OpenCV template matching to identify game icons with high accuracy and performance optimizations.
+
+## Core Features
+
+### 🎮 **Live Real-Time Overlay**
+- **Real-time screen monitoring** with transparent overlay
+- **Live icon detection** as you play
+- **Visual detection zone** with bright colored borders
+- **Multi-monitor support** for complex setups
+- **Click-through overlay** (Windows with pywin32)
+- **Configurable detection parameters** via GUI controls
+
+### 🔍 **Static Screenshot Analysis**
+- **Multi-scale template matching** (20% to 100% scale range)
+- **High-performance optimization** (3-icon limit, priority search)
+- **Smart search regions** (configurable bottom fraction)
+- **Grayed-out icon detection** using histogram equalization
+- **Accurate coordinate reporting** with confidence scores
 
 ## Files Structure
 
-### Core Program
-- **`game_icon_detector.py`** - Main icon detection program
-- **`README.md`** - Complete documentation
+### Core Applications
+- **`live_icon_overlay.py`** - Real-time overlay application with GUI controls
+- **`game_icon_detector.py`** - Static screenshot analysis engine
+- **`setup_overlay.py`** - Automated dependency installer
+
+### Configuration Files
+- **`requirements_overlay.txt`** - Python package dependencies
+- **`README.md`** - This documentation
 
 ### Data Directories
-- **`market_icons/`** - Contains icon templates (PNG files)
-- **`test_game_screenshots/`** - Contains screenshots to process
-- **`highlighted_screenshots/`** - Output folder for results
+- **`market_icons/`** - Icon templates (20 game icons included)
+- **`test_game_screenshots/`** - Sample screenshots for testing
+- **`highlighted_screenshots/`** - Output folder with detection results
 
-### Documentation
-- **`ADDING_ICONS.md`** - Guide for adding new icons
-- **`PERFORMANCE_OPTIMIZATION.md`** - Performance improvements and configuration
+## Quick Start
+
+### 1. Install Dependencies
+```bash
+python setup_overlay.py
+```
+
+### 2. Run Live Overlay
+```bash
+python live_icon_overlay.py
+```
+
+### 3. Run Static Analysis
+```bash
+python game_icon_detector.py
+```
+
+## Live Overlay Usage
+
+The live overlay provides a real-time detection system perfect for gaming:
+
+1. **Launch the overlay**: `python live_icon_overlay.py`
+2. **Position the control window** where you can see it
+3. **Click "Start Detection"** to activate the overlay
+4. **Adjust settings** using the sliders:
+   - **Threshold**: Detection sensitivity (0.5-0.9)
+   - **Update Rate**: Detection frequency (0.5-3.0 seconds)
+5. **Use "Test Zone"** to verify detection area positioning
+
+### Live Overlay Features
+- **Detection Zone Visualization**: Bright colored borders show active detection area
+- **Multi-Monitor Support**: Automatically positions on center monitor (configurable)
+- **Real-Time Results**: Shows detected icons with confidence scores
+- **Adjustable Parameters**: Threshold and update rate sliders
+- **Monitor Information**: Displays screen dimensions and positioning
+
+## Static Analysis Usage
+
+For analyzing existing screenshots:
+
+```bash
+python game_icon_detector.py
+```
+
+**Results include:**
+- **Highlighted images** in `highlighted_screenshots/` folder
+- **JSON results** in `detection_results.json`
+- **Console output** with detection summary
 
 ## Adding New Icons
 
-Adding new icons is incredibly simple:
+Adding icons is simple:
 
-1. **Save your icon as a PNG file**
-2. **Copy it to the `market_icons/` folder**
-3. **Run the program** - it automatically detects all PNG files
-
-```bash
-# Example: Adding a PEKKA icon
-Copy-Item "your_pekka_icon.png" "market_icons\pekka.png"
-python game_icon_detector.py
-```
-
-**No code changes required!** The program automatically:
-- Detects all icons in the `market_icons/` folder
-- Tests them at multiple scales (20% to 100%)
-- Generates color-coded results for each icon
-- Updates JSON output with all findings
-
-For detailed instructions, see `ADDING_ICONS.md`.
-
-## Results
-
-### Detection Performance
-- **Total Screenshots Processed**: 4
-- **Total Matches Found**: 2
-- **False Positives**: 0
-- **False Negatives**: 0
-
-### Successful Detections
-
-#### 1. mega_knight_affordable.png
-- **Icon Found**: mega_knight
-- **Center Coordinates**: (411, 1163)
-- **Size**: 107x132 pixels
-- **Confidence**: 0.701
-- **Scale**: 25.7% of original template size
-
-#### 2. mega_knight_unaffordable.png
-- **Icon Found**: mega_knight
-- **Center Coordinates**: (300, 1163)
-- **Size**: 107x132 pixels
-- **Confidence**: 0.607
-- **Scale**: 25.7% of original template size
-
-### No False Positives
-- **pekka_affordable_upgrade.png**: Correctly identified no mega_knight (confidence: 0.386)
-- **pekka_unaffordable_upgrade.png**: Correctly identified no mega_knight (confidence: 0.428)
-
-## Output Files
-
-### Highlighted Images
-- `detected_mega_knight_affordable.png` - Shows detected icon with green rectangle and confidence score
-- `detected_mega_knight_unaffordable.png` - Shows detected icon with green rectangle and confidence score
-
-### JSON Results
-- `detection_results.json` - Complete detection results in structured format including:
-  - Detection summary with timestamps and statistics
-  - Detailed results for each screenshot
-  - Coordinate information for all matches
-  - Confidence scores and scale information
-
-## Key Features
-
-### 🚀 **High-Performance Multi-Scale Template Matching**
-- Tests 15 different scale levels from 20% to 100% of original template size
-- **75% faster performance** by searching only bottom 25% of screenshots
-- Handles icons that appear smaller or larger than the template
-- Automatically finds the best matching scale
-
-### 🎯 **Accurate Coordinate Reporting**
-- Reports both top-left corner coordinates and center coordinates
-- Provides precise bounding box dimensions
-- Includes confidence scores for each match
-- Coordinates automatically adjusted for search region optimization
-
-### 🔍 **Smart Search Region**
-- Configurable search area (default: bottom 25% of image)
-- Reduces processing time by ~75% for typical use cases
-- Maintains 100% detection accuracy
-- Perfect for UI elements that appear in bottom area of screenshots
-
-### Overlap Removal
-- Removes duplicate detections from different scales
-- Keeps the highest confidence match when overlaps occur
-- Prevents false multiple detections of the same icon
-
-### Visual Feedback
-- Generates highlighted images showing detection results
-- Green rectangles around detected icons
-- Red center points for precise coordinate reference
-- Confidence scores displayed on the image
-
-## Usage
-
-To run the icon detection system:
+1. **Save icon as PNG** (any size, the system auto-scales)
+2. **Copy to `market_icons/` folder**
+3. **Run detection** - new icon is automatically included
 
 ```bash
-python game_icon_detector.py
+# Example
+copy "new_icon.png" "market_icons\wizard.png"
+python live_icon_overlay.py
 ```
 
-The program will:
-1. Scan all PNG files in the `market_icons` folder as templates
-2. Process all PNG files in the `test_game_screenshots` folder
-3. Generate highlighted images in the `highlighted_screenshots` folder
-4. Save detailed results to `detection_results.json`
+## Performance Optimizations
+
+### Live Detection Optimizations
+- **3-icon detection limit** for real-time performance
+- **Priority search ordering** (most common icons first)
+- **Configurable update rates** (0.5-3.0 second intervals)
+- **Optimized search regions** (bottom 40% of screen by default)
+
+### Static Analysis Optimizations
+- **Multi-scale template matching** with 15 scale levels
+- **Smart search regions** reduce processing by ~75%
+- **Overlap removal** prevents duplicate detections
+- **Early exit conditions** for performance
 
 ## Technical Specifications
 
-- **Template Matching Method**: OpenCV TM_CCOEFF_NORMED
-- **Confidence Threshold**: 0.6 (60%)
-- **Scale Range**: 0.2 to 1.0 (20% to 100%)
-- **Scale Steps**: 15 different levels tested
-- **Overlap Threshold**: 30% for duplicate removal
+### Detection Engine
+- **Method**: OpenCV TM_CCOEFF_NORMED template matching
+- **Default Threshold**: 0.65 (65% confidence)
+- **Scale Range**: 0.2 to 1.0 (20% to 100% of template size)
+- **Search Area**: Bottom 40% of screen (configurable)
+- **Preprocessing**: Histogram equalization for grayed-out icons
+
+### Multi-Monitor Support
+- **Automatic positioning** for center monitor in 3-monitor setups
+- **Configurable offsets** for different monitor arrangements
+- **Screen size detection** using PyAutoGUI
+- **Overlay positioning** at monitor offset +1920+0 for typical setups
+
+### Dependencies
+- **OpenCV** (cv2) - Image processing and template matching
+- **PyAutoGUI** - Screen capture and monitoring
+- **Tkinter** - GUI interface and overlay rendering
+- **NumPy** - Array processing and calculations
+- **Optional: pywin32** - Windows click-through overlay support
+
+## Sample Detection Results
+
+### Included Test Cases
+- **Mega Knight (Affordable)**: Successfully detected at 70.1% confidence
+- **Mega Knight (Unaffordable)**: Successfully detected at 60.7% confidence  
+- **PEKKA scenarios**: Correctly identified (no false positives)
+
+### Icon Library (20 Icons Included)
+- Archer, Archer Queen, Bandit, Barbarian, Bomber
+- Dart Goblin, Executioner, Giant Skeleton, Goblin, Goblin Machine
+- Golden Knight, Knight, Mega Knight, PEKKA, Prince
+- Princess, Royal Ghost, Skeleton King, Spear Goblin, Valkyrie
+
+## System Requirements
+
+- **Python 3.7+** with pip
+- **Windows** (for click-through overlay support)
+- **Multi-monitor support** (automatically detected)
+- **Screen resolution**: Tested with 1440p (2560x1440)
 
 ## Success Metrics
 
-✅ **Accurate Detection**: Successfully found mega knight icons in relevant screenshots  
-✅ **No False Positives**: Correctly ignored PEKKA screenshots  
-✅ **Scale Adaptation**: Handled 4x scale difference (418x515 → 107x132)  
-✅ **Precise Coordinates**: Reported exact pixel locations  
-✅ **Structured Output**: Generated both visual and JSON results  
-✅ **Robust Algorithm**: Handles variations in icon appearance and positioning  
+✅ **Real-Time Performance**: Live detection with configurable update rates  
+✅ **Multi-Monitor Support**: Works with complex monitor setups  
+✅ **High Accuracy**: 60%+ confidence threshold with low false positives  
+✅ **Easy Setup**: One-command dependency installation  
+✅ **User-Friendly**: GUI controls with visual feedback  
+✅ **Extensible**: Easy icon addition without code changes  
+✅ **Optimized**: Performance optimizations for real-time use  
 
-The system is ready for production use and can be easily extended to detect additional icons by adding them to the `market_icons` folder.
+The system is production-ready for both real-time gaming assistance and static screenshot analysis.

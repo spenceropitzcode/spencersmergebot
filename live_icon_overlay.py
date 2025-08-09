@@ -15,9 +15,7 @@ import tkinter as tk
 from tkinter import ttk
 import threading
 import time
-from PIL import Image, ImageTk
 from game_icon_detector import GameIconDetector
-import io
 
 class LiveIconOverlay:
     def __init__(self):
@@ -46,18 +44,10 @@ class LiveIconOverlay:
         # Print screen info for debugging
         print(f"Detected screen size: {self.screen_width}x{self.screen_height}")
         
-        # For multi-monitor setups, we might need to specify which monitor
-        try:
-            import tkinter as tk_temp
-            root_temp = tk_temp.Tk()
-            root_temp.withdraw()
-            self.monitor_width = root_temp.winfo_screenwidth()
-            self.monitor_height = root_temp.winfo_screenheight()
-            root_temp.destroy()
-            print(f"Tkinter screen size: {self.monitor_width}x{self.monitor_height}")
-        except:
-            self.monitor_width = self.screen_width
-            self.monitor_height = self.screen_height
+        # For multi-monitor setups, use the same dimensions
+        self.monitor_width = self.screen_width
+        self.monitor_height = self.screen_height
+        print(f"Monitor size: {self.monitor_width}x{self.monitor_height}")
         
         # Detection results
         self.current_detections = []
