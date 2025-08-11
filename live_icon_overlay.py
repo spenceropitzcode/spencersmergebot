@@ -11,6 +11,7 @@ import threading
 import time
 from game_icon_detector import GameIconDetector
 from pathlib import Path
+from troop_definitions import TROOP_REGISTRY, get_troop_by_icon_name
 
 class LiveIconOverlay:
     def __init__(self):
@@ -614,15 +615,38 @@ class LiveIconOverlay:
                                                    display_x + icon_size, display_y + icon_size,
                                                    outline=color, width=3, fill=color, stipple='gray25')
                 
-                label = f"{detection['icon_name']}\n{detection['confidence']:.2f}"
-                self.overlay_canvas.create_text(display_x + icon_size//2, display_y + icon_size + 5, 
-                                              text=label, fill='white', font=('Arial', 9, 'bold'),
-                                              anchor='n')
-                self.overlay_canvas.create_text(display_x + icon_size//2, display_y + icon_size + 5, 
-                                              text=label, fill='black', font=('Arial', 10, 'bold'),
-                                              anchor='n')
-                self.overlay_canvas.create_text(display_x + icon_size//2, display_y + icon_size + 5, 
-                                              text=label, fill='white', font=('Arial', 9, 'bold'),
+                # Get troop information
+                troop = get_troop_by_icon_name(detection['icon_name'])
+                
+                if troop:
+                    # Enhanced label with troop stats
+                    stars = "⭐" * troop.stars.value
+                    label = f"{troop.name}\n{troop.cost}💧 {stars}\n{detection['confidence']:.2f}"
+                    
+                    # Show key traits (convert enum to names)
+                    key_traits = troop.traits[:2]  # Show first 2 traits
+                    if key_traits:
+                        traits_text = ", ".join([trait.name for trait in key_traits])
+                        label += f"\n{traits_text}"
+                else:
+                    # Fallback to basic info
+                    label = f"{detection['icon_name']}\n{detection['confidence']:.2f}"
+                
+                # Draw text with outline for better visibility
+                text_x = display_x + icon_size//2
+                text_y = display_y + icon_size + 5
+                
+                # Black outline
+                for dx in [-1, 0, 1]:
+                    for dy in [-1, 0, 1]:
+                        if dx != 0 or dy != 0:
+                            self.overlay_canvas.create_text(text_x + dx, text_y + dy, 
+                                                          text=label, fill='black', font=('Arial', 8, 'bold'),
+                                                          anchor='n')
+                
+                # White text on top
+                self.overlay_canvas.create_text(text_x, text_y, 
+                                              text=label, fill='white', font=('Arial', 8, 'bold'),
                                               anchor='n')
                                               
             except tk.TclError:
