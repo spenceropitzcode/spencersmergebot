@@ -1,11 +1,5 @@
 """
-Live Icon Overlay using PyAutoGUI and GameIconDetector
-
-This program continuously captures the screen and displays an overlay
-showing detected game icons in real-time.
-
-Author: AI Assistant
-Date: August 2025
+Live Icon Overlay for real-time game icon detection.
 """
 
 import cv2
@@ -21,35 +15,33 @@ class LiveIconOverlay:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Live Icon Detector Overlay")
-        self.root.attributes('-topmost', True)  # Keep window on top
-        self.root.attributes('-alpha', 0.8)  # Semi-transparent
+        self.root.attributes('-topmost', True)
+        self.root.attributes('-alpha', 0.8)
         
-        # Initialize the game icon detector
+        self.scan_area = {
+            'left_percent': 39,
+            'right_percent': 57,
+            'top_percent': 85,
+            'bottom_percent': 100
+        }
+        
         self.detector = GameIconDetector(
-            threshold=0.65,
-            search_bottom_fraction=0.4,  # Search larger area for live detection
+            threshold=0.8,
+            search_bottom_fraction=0.4,
             ignore_top_right_fraction=0,
             use_preprocessing=True
         )
         
-        # Control variables
         self.running = False
         self.overlay_visible = False
         self.capture_thread = None
         self.overlay_canvas = None
-        # Get screen information for multi-monitor setups
         self.screen_width = pyautogui.size().width
         self.screen_height = pyautogui.size().height
         
-        # Print screen info for debugging
-        print(f"Detected screen size: {self.screen_width}x{self.screen_height}")
-        
-        # For multi-monitor setups, use the same dimensions
         self.monitor_width = self.screen_width
         self.monitor_height = self.screen_height
-        print(f"Monitor size: {self.monitor_width}x{self.monitor_height}")
         
-        # Detection results
         self.current_detections = []
         
         self.setup_ui()
@@ -77,16 +69,16 @@ class LiveIconOverlay:
         test_zone_button.pack(side=tk.LEFT, padx=5)
         
         # Settings frame
-        settings_frame = ttk.LabelFrame(self.root, text="Settings")
+        settings_frame = ttk.LabelFrame(self.root, text="Detection Settings")
         settings_frame.pack(pady=5, padx=10, fill=tk.X)
         
-        # Threshold setting
+        # Threshold setting - updated default to work with detected scale
         ttk.Label(settings_frame, text="Threshold:").grid(row=0, column=0, sticky=tk.W)
-        self.threshold_var = tk.DoubleVar(value=0.65)
-        threshold_scale = ttk.Scale(settings_frame, from_=0.3, to=0.9, variable=self.threshold_var, 
+        self.threshold_var = tk.DoubleVar(value=0.8)  # Updated to 0.8 as requested
+        threshold_scale = ttk.Scale(settings_frame, from_=0.2, to=1.0, variable=self.threshold_var, 
                                   orient=tk.HORIZONTAL, length=200, command=self.update_threshold_label)
         threshold_scale.grid(row=0, column=1, padx=5)
-        self.threshold_label = ttk.Label(settings_frame, text="0.65")
+        self.threshold_label = ttk.Label(settings_frame, text="0.8")
         self.threshold_label.grid(row=0, column=2, padx=5)
 
         # Update rate setting
@@ -98,16 +90,57 @@ class LiveIconOverlay:
         self.rate_label = ttk.Label(settings_frame, text="1.0")
         self.rate_label.grid(row=1, column=2, padx=5)
         
+        # Scan Area Settings
+        scan_area_frame = ttk.LabelFrame(self.root, text="Scan Area (% of screen)")
+        scan_area_frame.pack(pady=5, padx=10, fill=tk.X)
+        
+        # Left boundary
+        ttk.Label(scan_area_frame, text="Left:").grid(row=0, column=0, sticky=tk.W)
+        self.left_var = tk.IntVar(value=self.scan_area['left_percent'])
+        left_scale = ttk.Scale(scan_area_frame, from_=0, to=50, variable=self.left_var, 
+                              orient=tk.HORIZONTAL, length=150, command=self.update_scan_area)
+        left_scale.grid(row=0, column=1, padx=5)
+        self.left_label = ttk.Label(scan_area_frame, text=f"{self.scan_area['left_percent']}%")
+        self.left_label.grid(row=0, column=2, padx=5)
+        
+        # Right boundary
+        ttk.Label(scan_area_frame, text="Right:").grid(row=0, column=3, sticky=tk.W, padx=(20,0))
+        self.right_var = tk.IntVar(value=self.scan_area['right_percent'])
+        right_scale = ttk.Scale(scan_area_frame, from_=50, to=100, variable=self.right_var, 
+                               orient=tk.HORIZONTAL, length=150, command=self.update_scan_area)
+        right_scale.grid(row=0, column=4, padx=5)
+        self.right_label = ttk.Label(scan_area_frame, text=f"{self.scan_area['right_percent']}%")
+        self.right_label.grid(row=0, column=5, padx=5)
+        
+        # Top boundary
+        ttk.Label(scan_area_frame, text="Top:").grid(row=1, column=0, sticky=tk.W)
+        self.top_var = tk.IntVar(value=self.scan_area['top_percent'])
+        top_scale = ttk.Scale(scan_area_frame, from_=50, to=95, variable=self.top_var, 
+                             orient=tk.HORIZONTAL, length=150, command=self.update_scan_area)
+        top_scale.grid(row=1, column=1, padx=5)
+        self.top_label = ttk.Label(scan_area_frame, text=f"{self.scan_area['top_percent']}%")
+        self.top_label.grid(row=1, column=2, padx=5)
+        
+        # Bottom boundary
+        ttk.Label(scan_area_frame, text="Bottom:").grid(row=1, column=3, sticky=tk.W, padx=(20,0))
+        self.bottom_var = tk.IntVar(value=self.scan_area['bottom_percent'])
+        bottom_scale = ttk.Scale(scan_area_frame, from_=80, to=100, variable=self.bottom_var, 
+                                orient=tk.HORIZONTAL, length=150, command=self.update_scan_area)
+        bottom_scale.grid(row=1, column=4, padx=5)
+        self.bottom_label = ttk.Label(scan_area_frame, text=f"{self.scan_area['bottom_percent']}%")
+        self.bottom_label.grid(row=1, column=5, padx=5)
+        
         # Monitor info display
-        monitor_info_frame = ttk.LabelFrame(self.root, text="Monitor Information")
+        monitor_info_frame = ttk.LabelFrame(self.root, text="Monitor & Scan Area Information")
         monitor_info_frame.pack(pady=5, padx=10, fill=tk.X)
         
-        monitor_info = f"PyAutoGUI Screen: {self.screen_width}x{self.screen_height}\n"
-        monitor_info += f"Tkinter Screen: {self.monitor_width}x{self.monitor_height}\n"
-        monitor_info += f"Detection Zone Height: {int(self.monitor_height * 0.4)} pixels"
+        left, top, right, bottom = self.get_scan_area_pixels()
+        monitor_info = f"Screen: {self.screen_width}x{self.screen_height}\n"
+        monitor_info += f"Scan Area: ({left},{top}) to ({right},{bottom})\n"
+        monitor_info += f"Scan Size: {right-left}x{bottom-top} pixels"
         
-        monitor_label = ttk.Label(monitor_info_frame, text=monitor_info, justify=tk.LEFT)
-        monitor_label.pack(pady=5, padx=5)
+        self.monitor_label = ttk.Label(monitor_info_frame, text=monitor_info, justify=tk.LEFT)
+        self.monitor_label.pack(pady=5, padx=5)
         
         # Status
         self.status_var = tk.StringVar(value="Ready")
@@ -117,21 +150,6 @@ class LiveIconOverlay:
         # Detection display
         self.detection_text = tk.Text(self.root, height=8, width=50)
         self.detection_text.pack(pady=5, padx=10)
-        
-        # Usage instructions
-        instructions_frame = ttk.LabelFrame(self.root, text="How to Use")
-        instructions_frame.pack(pady=5, padx=10, fill=tk.X)
-        
-        instructions = """1. Position this window where you can see it
-2. Open your game in another window
-3. Click 'Start Detection' 
-4. The overlay will appear over your ENTIRE screen
-5. Play your game - detected icons will show colored boxes
-6. Adjust threshold if detection is too sensitive/not sensitive enough
-7. Click 'Stop Detection' to remove overlay"""
-        
-        instructions_label = ttk.Label(instructions_frame, text=instructions, justify=tk.LEFT)
-        instructions_label.pack(pady=5, padx=5)
         
         # Create overlay window
         self.create_overlay_window()
@@ -143,23 +161,53 @@ class LiveIconOverlay:
     def update_rate_label(self, value):
         """Update rate label when slider changes"""
         self.rate_label.config(text=f"{float(value):.1f}")
+    
+    def update_scan_area(self, value=None):
+        """Update scan area when sliders change"""
+        self.scan_area['left_percent'] = self.left_var.get()
+        self.scan_area['right_percent'] = self.right_var.get()
+        self.scan_area['top_percent'] = self.top_var.get()
+        self.scan_area['bottom_percent'] = self.bottom_var.get()
+        
+        # Update labels
+        self.left_label.config(text=f"{self.scan_area['left_percent']}%")
+        self.right_label.config(text=f"{self.scan_area['right_percent']}%")
+        self.top_label.config(text=f"{self.scan_area['top_percent']}%")
+        self.bottom_label.config(text=f"{self.scan_area['bottom_percent']}%")
+        
+        # If overlay is visible, update the detection zone
+        if self.overlay_visible and self.overlay_canvas:
+            self.draw_detection_zone()
+
+    def get_scan_area_pixels(self):
+        """Convert scan area percentages to pixel coordinates"""
+        left = int(self.monitor_width * self.scan_area['left_percent'] / 100)
+        right = int(self.monitor_width * self.scan_area['right_percent'] / 100)
+        top = int(self.monitor_height * self.scan_area['top_percent'] / 100)
+        bottom = int(self.monitor_height * self.scan_area['bottom_percent'] / 100)
+        return left, top, right, bottom
         
     def create_overlay_window(self):
         """Create a transparent overlay window for drawing detections"""
         self.overlay_window = tk.Toplevel(self.root)
         self.overlay_window.title("Detection Overlay")
         self.overlay_window.attributes('-topmost', True)
-        self.overlay_window.attributes('-alpha', 0.7)
+        self.overlay_window.attributes('-alpha', 0.8)  # Made less transparent for better visibility
         
-        # Position for center monitor in 3-monitor setup (main monitor starts at x=1920)
-        monitor_x_offset = 1920  # Your main monitor starts after the left monitor
+        # Position for the actual screen (no multi-monitor offset needed)
+        monitor_x_offset = 0  # Start at the beginning of the screen
         self.overlay_window.geometry(f"{self.monitor_width}x{self.monitor_height}+{monitor_x_offset}+0")
-        self.overlay_window.configure(bg='black')
+        self.overlay_window.configure(bg='black')  # Will be made transparent
         self.overlay_window.overrideredirect(True)  # Remove window decorations
         
-        print(f"Overlay positioned for center monitor: {self.monitor_width}x{self.monitor_height}+{monitor_x_offset}+0")
+        # Make the window background transparent
+        self.overlay_window.wm_attributes('-transparentcolor', 'black')
+        
+        print(f"Overlay positioned for main screen: {self.monitor_width}x{self.monitor_height}+{monitor_x_offset}+0")
         
         # Make the window click-through if possible (Windows specific)
+        # Temporarily commented out to ensure visibility
+        """
         try:
             import win32gui
             import win32con
@@ -167,13 +215,12 @@ class LiveIconOverlay:
             extended_style = win32gui.GetWindowLong(hwnd, win32con.GWL_EXSTYLE)
             win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE, 
                                  extended_style | win32con.WS_EX_LAYERED | win32con.WS_EX_TRANSPARENT)
-            print("Click-through overlay enabled")
         except ImportError:
-            print("Note: Install pywin32 for click-through overlay functionality")
+            pass
         except Exception as e:
-            print(f"Could not enable click-through: {e}")
+            pass
+        """
         
-        # Canvas for drawing overlays
         self.overlay_canvas = tk.Canvas(self.overlay_window, 
                                       width=self.monitor_width, 
                                       height=self.monitor_height,
@@ -226,11 +273,9 @@ class LiveIconOverlay:
             
             print("Test detection zone displayed - should be VERY visible with bright colors!")
             
-            # Hide after 5 seconds
             self.root.after(5000, self.hide_test_zone)
-            
         except Exception as e:
-            print(f"Error testing detection zone: {e}")
+            pass
     
     def hide_test_zone(self):
         """Hide the test detection zone"""
@@ -335,36 +380,38 @@ class LiveIconOverlay:
                 time.sleep(sleep_time)
                 
             except Exception as e:
-                print(f"Detection error: {e}")
                 self.root.after(0, lambda: self.status_var.set(f"Error: {e}"))
                 time.sleep(1)
                 
     def process_screenshot(self, screenshot_cv):
-        """Process screenshot with the icon detector"""
+        """Process screenshot with the icon detector using custom scan area"""
         detections = []
         
-        # Get all icon templates
+        # Get custom scan area coordinates
+        left, top, right, bottom = self.get_scan_area_pixels()
+        
+        scan_region = screenshot_cv[top:bottom, left:right]
+        
         icon_files = list(self.detector.icons_dir.glob("*.png"))
         if not icon_files:
             return detections
             
         icon_files = self.detector.prioritize_icon_search(icon_files)
         
-        # Process each icon type
         for icon_file in icon_files:
-            if len(detections) >= 3:  # Max 3 icons
+            if len(detections) >= 3:
                 break
                 
             icon_name = icon_file.stem
             template_image = cv2.imread(str(icon_file))
             if template_image is None:
                 continue
-                
-            matches, best_confidence = self.detector.find_matches_multiscale(screenshot_cv, template_image)
+            
+            matches, best_confidence = self.find_matches_optimized(scan_region, template_image, left, top)
             
             if matches:
                 for match in matches:
-                    detections.append({
+                    adjusted_match = {
                         'icon_name': icon_name,
                         'x': match['x'],
                         'y': match['y'],
@@ -373,9 +420,114 @@ class LiveIconOverlay:
                         'center_x': match['center_x'],
                         'center_y': match['center_y'],
                         'confidence': match['confidence']
-                    })
+                    }
+                    detections.append(adjusted_match)
                     
         return detections
+    
+    def find_matches_optimized(self, region_image, template_image, offset_x, offset_y):
+        """Find template matches optimized for small detection windows"""
+        # Convert to grayscale
+        region_gray = cv2.cvtColor(region_image, cv2.COLOR_BGR2GRAY)
+        template_gray = cv2.cvtColor(template_image, cv2.COLOR_BGR2GRAY)
+        
+        # Enhanced preprocessing for small windows
+        if self.detector.use_preprocessing:
+            # Apply histogram equalization
+            region_gray = cv2.equalizeHist(region_gray)
+            template_gray = cv2.equalizeHist(template_gray)
+            
+            # Additional preprocessing for small regions - reduce noise
+            region_gray = cv2.bilateralFilter(region_gray, 5, 75, 75)
+            template_gray = cv2.bilateralFilter(template_gray, 5, 75, 75)
+        
+        # Get template dimensions
+        template_height, template_width = template_gray.shape
+        
+        all_matches = []
+        best_confidence = 0
+        
+        # Optimized scale range based on test results (0.3 worked best)
+        # Use more scales around the optimal range for better precision
+        scales = np.concatenate([
+            np.linspace(0.25, 0.35, 8),  # Fine-grained around optimal 0.3
+            np.linspace(0.15, 0.25, 5),  # Lower range
+            np.linspace(0.35, 0.5, 5)    # Higher range
+        ])
+        
+        # Add edge padding to reduce edge effects in small windows
+        pad_size = 10
+        region_padded = cv2.copyMakeBorder(region_gray, pad_size, pad_size, pad_size, pad_size, 
+                                         cv2.BORDER_REFLECT)
+        
+        for scale in scales:
+            # Calculate new dimensions
+            new_width = int(template_width * scale)
+            new_height = int(template_height * scale)
+            
+            # Skip if template becomes too small or too large
+            if new_width < 6 or new_height < 6:  # Allow slightly smaller templates
+                continue
+            if new_width > region_image.shape[1] * 0.8 or new_height > region_image.shape[0] * 0.8:
+                continue
+            
+            # Resize template
+            template_scaled = cv2.resize(template_gray, (new_width, new_height))
+            
+            # Perform template matching on padded region
+            result = cv2.matchTemplate(region_padded, template_scaled, cv2.TM_CCOEFF_NORMED)
+            
+            # Find the best match for this scale
+            min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+            
+            if max_val > best_confidence:
+                best_confidence = max_val
+            
+            # Use a slightly lower threshold for initial detection, then filter by quality
+            detection_threshold = max(0.25, self.detector.threshold - 0.15)
+            
+            # Find all matches above threshold for this scale
+            if max_val >= detection_threshold:
+                locations = np.where(result >= detection_threshold)
+                
+                for pt in zip(*locations[::-1]):  # Switch x and y coordinates
+                    x, y = pt
+                    confidence = result[y, x]
+                    
+                    # Only accept matches that meet the original threshold
+                    if confidence < self.detector.threshold:
+                        continue
+                    
+                    # Adjust coordinates to account for padding and scan region offset
+                    actual_x = int(x - pad_size + offset_x)
+                    actual_y = int(y - pad_size + offset_y)
+                    
+                    # Skip matches too close to edges (likely edge artifacts)
+                    if (x < pad_size + 5 or y < pad_size + 5 or 
+                        x > result.shape[1] - 5 or y > result.shape[0] - 5):
+                        continue
+                    
+                    match_info = {
+                        'x': actual_x,
+                        'y': actual_y,
+                        'width': int(new_width),
+                        'height': int(new_height),
+                        'center_x': int(actual_x + new_width // 2),
+                        'center_y': int(actual_y + new_height // 2),
+                        'confidence': float(confidence),
+                        'scale': float(scale)
+                    }
+                    all_matches.append(match_info)
+        
+        # Remove overlapping matches
+        filtered_matches = self.detector._remove_overlapping_matches(all_matches)
+        
+        # Return only the best match for this icon
+        if filtered_matches:
+            best_match = max(filtered_matches, key=lambda x: x['confidence'])
+            return [best_match], best_confidence
+        
+        return filtered_matches, best_confidence
         
     def update_overlay(self, detections):
         """Update the overlay with current detections"""
@@ -397,119 +549,66 @@ class LiveIconOverlay:
         # Draw detection zone rectangle
         self.draw_detection_zone()
         
-        # Colors for different icons
-        colors = ['#00FF00', '#FF0000', '#0000FF', '#FFFF00', '#FF00FF']
+        # Get scan area coordinates to position icons above it
+        left, top, right, bottom = self.get_scan_area_pixels()
         
-        # Draw detection boxes and labels
         for i, detection in enumerate(detections):
             try:
+                colors = ['#00FF00', '#FF0000', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF']
                 color = colors[i % len(colors)]
                 
                 x, y = detection['x'], detection['y']
                 w, h = detection['width'], detection['height']
-                
-                # Draw rectangle
-                self.overlay_canvas.create_rectangle(x, y, x + w, y + h, 
-                                                   outline=color, width=3, fill='')
-                
-                # Draw center point
                 cx, cy = detection['center_x'], detection['center_y']
-                self.overlay_canvas.create_oval(cx-4, cy-4, cx+4, cy+4, 
-                                              fill='red', outline='white')
                 
-                # Draw label
-                label = f"{detection['icon_name']}: {detection['confidence']:.2f}"
-                self.overlay_canvas.create_text(x + 5, y - 15, text=label, 
-                                              fill='white', font=('Arial', 10, 'bold'),
-                                              anchor='nw')
+                display_x = x
+                display_y = top - 80 - (i * 60)
+                
+                if display_y < 50:
+                    display_y = top - 40
+                    display_x = left + (i * 120)
+                
+                icon_size = 40
+                self.overlay_canvas.create_rectangle(display_x, display_y, 
+                                                   display_x + icon_size, display_y + icon_size,
+                                                   outline=color, width=3, fill=color, stipple='gray25')
+                
+                self.overlay_canvas.create_line(cx, cy, display_x + icon_size//2, display_y + icon_size,
+                                              fill=color, width=2, dash=(5, 5))
+                
+                label = f"{detection['icon_name']}\n{detection['confidence']:.2f}"
+                self.overlay_canvas.create_text(display_x + icon_size//2, display_y + icon_size + 5, 
+                                              text=label, fill='white', font=('Arial', 9, 'bold'),
+                                              anchor='n')
+                self.overlay_canvas.create_text(display_x + icon_size//2, display_y + icon_size + 5, 
+                                              text=label, fill='black', font=('Arial', 10, 'bold'),
+                                              anchor='n')
+                self.overlay_canvas.create_text(display_x + icon_size//2, display_y + icon_size + 5, 
+                                              text=label, fill='white', font=('Arial', 9, 'bold'),
+                                              anchor='n')
+                
+                self.overlay_canvas.create_oval(cx-2, cy-2, cx+2, cy+2, 
+                                              fill=color, outline='white', width=1)
+                                              
             except tk.TclError:
                 break
                 
-        # Update detection text
         self.update_detection_text(detections)
     
     def draw_detection_zone(self):
-        """Draw a rectangle showing the detection zone"""
         try:
-            # Use the detector's actual search area
-            screen_height = self.monitor_height
-            search_height = int(screen_height * self.detector.search_bottom_fraction)
-            search_start_y = screen_height - search_height
+            left, top, right, bottom = self.get_scan_area_pixels()
             
-            print(f"Drawing detection zone: y={search_start_y} to {screen_height}, width={self.monitor_width}")
-            
-            # Clear any existing detection zone
             self.overlay_canvas.delete("detection_zone")
             
-            # Draw a VERY thick, bright green outer border
             self.overlay_canvas.create_rectangle(
-                0, search_start_y, 
-                self.monitor_width, screen_height,
-                outline='lime', width=8, tags="detection_zone"
+                left, top, right, bottom,
+                outline='lime', width=3, tags="detection_zone", fill=''
             )
             
-            # Draw a thick red inner border
-            self.overlay_canvas.create_rectangle(
-                10, search_start_y + 10, 
-                self.monitor_width - 10, screen_height - 10,
-                outline='red', width=5, tags="detection_zone"
-            )
-            
-            # Draw large corner squares for maximum visibility
-            corner_size = 60
-            # Top-left - bright yellow square
-            self.overlay_canvas.create_rectangle(
-                20, search_start_y + 20, 
-                20 + corner_size, search_start_y + 20 + corner_size,
-                fill='yellow', outline='black', width=3, tags="detection_zone"
-            )
-            
-            # Top-right - bright blue square
-            self.overlay_canvas.create_rectangle(
-                self.monitor_width - 20 - corner_size, search_start_y + 20, 
-                self.monitor_width - 20, search_start_y + 20 + corner_size,
-                fill='blue', outline='white', width=3, tags="detection_zone"
-            )
-            
-            # Bottom-left - bright magenta square
-            self.overlay_canvas.create_rectangle(
-                20, screen_height - 20 - corner_size, 
-                20 + corner_size, screen_height - 20,
-                fill='magenta', outline='white', width=3, tags="detection_zone"
-            )
-            
-            # Bottom-right - bright orange square
-            self.overlay_canvas.create_rectangle(
-                self.monitor_width - 20 - corner_size, screen_height - 20 - corner_size, 
-                self.monitor_width - 20, screen_height - 20,
-                fill='orange', outline='black', width=3, tags="detection_zone"
-            )
-            
-            # Large text label with high contrast background
-            label_text = "*** DETECTION ZONE ACTIVE ***"
-            text_x = self.monitor_width // 2
-            text_y = search_start_y + 100
-            
-            # Large black background rectangle
-            self.overlay_canvas.create_rectangle(
-                text_x - 180, text_y - 25, 
-                text_x + 180, text_y + 25,
-                fill='black', outline='white', width=4, tags="detection_zone"
-            )
-            
-            # Large white text
-            self.overlay_canvas.create_text(
-                text_x, text_y, 
-                text=label_text,
-                fill='white', font=('Arial', 18, 'bold'),
-                tags="detection_zone"
-            )
-            
-            # Force immediate update
             self.overlay_canvas.update_idletasks()
             
         except (tk.TclError, AttributeError) as e:
-            print(f"Error drawing detection zone: {e}")
             pass
         
     def update_detection_text(self, detections):
