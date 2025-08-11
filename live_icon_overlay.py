@@ -10,6 +10,7 @@ from tkinter import ttk
 import threading
 import time
 from game_icon_detector import GameIconDetector
+from pathlib import Path
 
 class LiveIconOverlay:
     def __init__(self):
@@ -24,6 +25,10 @@ class LiveIconOverlay:
             'top_percent': 85,
             'bottom_percent': 100
         }
+        
+        # Preprocessed template cache for speed optimization
+        self.preprocessed_templates = {}
+        self.scales = np.array([0.22, 0.24, 0.26, 0.28, 0.30])
         
         self.detector = GameIconDetector(
             threshold=0.8,
@@ -45,6 +50,58 @@ class LiveIconOverlay:
         self.current_detections = []
         
         self.setup_ui()
+        self.preprocess_all_templates()
+        
+    def preprocess_all_templates(self):
+        """Preprocess all templates at all scales for maximum speed"""
+        print("Preprocessing templates for optimal performance...")
+        
+        icons_dir = Path("market_icons")
+        if not icons_dir.exists():
+            print("Warning: market_icons directory not found")
+            return
+        
+        icon_files = list(icons_dir.glob("*.png"))
+        total_templates = len(icon_files) * len(self.scales)
+        
+        print(f"Processing {len(icon_files)} icons at {len(self.scales)} scales = {total_templates} templates")
+        
+        for icon_file in icon_files:
+            icon_name = icon_file.stem
+            template_image = cv2.imread(str(icon_file))
+            
+            if template_image is None:
+                continue
+                
+            # Convert to grayscale once
+            template_gray = cv2.cvtColor(template_image, cv2.COLOR_BGR2GRAY)
+            
+            # Apply preprocessing once
+            if self.detector.use_preprocessing:
+                template_gray = cv2.equalizeHist(template_gray)
+            
+            # Create scaled versions at all scales
+            self.preprocessed_templates[icon_name] = {}
+            
+            for scale in self.scales:
+                # Get original dimensions
+                template_height, template_width = template_gray.shape
+                
+                # Calculate new dimensions
+                new_width = int(template_width * scale)
+                new_height = int(template_height * scale)
+                
+                # Skip invalid sizes
+                if new_width < 5 or new_height < 5:
+                    continue
+                
+                # Create scaled template
+                template_scaled = cv2.resize(template_gray, (new_width, new_height))
+                
+                # Store preprocessed template
+                self.preprocessed_templates[icon_name][scale] = template_scaled
+        
+        print(f"✅ Preprocessing complete! {len(self.preprocessed_templates)} icons ready for high-speed detection")
         
     def setup_ui(self):
         """Setup the user interface"""
@@ -83,11 +140,11 @@ class LiveIconOverlay:
 
         # Update rate setting
         ttk.Label(settings_frame, text="Update Rate (sec):").grid(row=1, column=0, sticky=tk.W)
-        self.update_rate_var = tk.DoubleVar(value=1.0)
-        rate_scale = ttk.Scale(settings_frame, from_=0.5, to=3.0, variable=self.update_rate_var, 
+        self.update_rate_var = tk.DoubleVar(value=0.1)
+        rate_scale = ttk.Scale(settings_frame, from_=0.05, to=1.0, variable=self.update_rate_var, 
                              orient=tk.HORIZONTAL, length=200, command=self.update_rate_label)
         rate_scale.grid(row=1, column=1, padx=5)
-        self.rate_label = ttk.Label(settings_frame, text="1.0")
+        self.rate_label = ttk.Label(settings_frame, text="0.1")
         self.rate_label.grid(row=1, column=2, padx=5)
         
         # Scan Area Settings
@@ -403,11 +460,12 @@ class LiveIconOverlay:
                 break
                 
             icon_name = icon_file.stem
-            template_image = cv2.imread(str(icon_file))
-            if template_image is None:
+            
+            # Skip if we don't have preprocessed templates for this icon
+            if icon_name not in self.preprocessed_templates:
                 continue
             
-            matches, best_confidence = self.find_matches_optimized(scan_region, template_image, left, top)
+            matches, best_confidence = self.find_matches_optimized(scan_region, icon_name, left, top)
             
             if matches:
                 for match in matches:
@@ -425,56 +483,40 @@ class LiveIconOverlay:
                     
         return detections
     
-    def find_matches_optimized(self, region_image, template_image, offset_x, offset_y):
-        """Find template matches optimized for small detection windows"""
-        # Convert to grayscale
+    def find_matches_optimized(self, region_image, icon_name, offset_x, offset_y):
+        """Find template matches using preprocessed templates for maximum speed"""
+        # Convert region to grayscale once
         region_gray = cv2.cvtColor(region_image, cv2.COLOR_BGR2GRAY)
-        template_gray = cv2.cvtColor(template_image, cv2.COLOR_BGR2GRAY)
         
-        # Enhanced preprocessing for small windows
+        # Apply preprocessing to region
         if self.detector.use_preprocessing:
-            # Apply histogram equalization
             region_gray = cv2.equalizeHist(region_gray)
-            template_gray = cv2.equalizeHist(template_gray)
-            
-            # Additional preprocessing for small regions - reduce noise
-            region_gray = cv2.bilateralFilter(region_gray, 5, 75, 75)
-            template_gray = cv2.bilateralFilter(template_gray, 5, 75, 75)
         
-        # Get template dimensions
-        template_height, template_width = template_gray.shape
+        # Check if we have preprocessed templates for this icon
+        if icon_name not in self.preprocessed_templates:
+            return []
         
         all_matches = []
         best_confidence = 0
         
-        # Optimized scale range based on test results (0.3 worked best)
-        # Use more scales around the optimal range for better precision
-        scales = np.concatenate([
-            np.linspace(0.25, 0.35, 8),  # Fine-grained around optimal 0.3
-            np.linspace(0.15, 0.25, 5),  # Lower range
-            np.linspace(0.35, 0.5, 5)    # Higher range
-        ])
-        
-        # Add edge padding to reduce edge effects in small windows
-        pad_size = 10
+        pad_size = 5
         region_padded = cv2.copyMakeBorder(region_gray, pad_size, pad_size, pad_size, pad_size, 
                                          cv2.BORDER_REFLECT)
         
-        for scale in scales:
-            # Calculate new dimensions
-            new_width = int(template_width * scale)
-            new_height = int(template_height * scale)
-            
-            # Skip if template becomes too small or too large
-            if new_width < 6 or new_height < 6:  # Allow slightly smaller templates
+        # Use preprocessed templates for maximum speed
+        for scale in self.scales:
+            # Get preprocessed template for this scale
+            if scale not in self.preprocessed_templates[icon_name]:
                 continue
-            if new_width > region_image.shape[1] * 0.8 or new_height > region_image.shape[0] * 0.8:
+                
+            template_scaled = self.preprocessed_templates[icon_name][scale]
+            template_height, template_width = template_scaled.shape
+            
+            # Skip if template becomes too large for region
+            if template_width > region_image.shape[1] * 0.8 or template_height > region_image.shape[0] * 0.8:
                 continue
             
-            # Resize template
-            template_scaled = cv2.resize(template_gray, (new_width, new_height))
-            
-            # Perform template matching on padded region
+            # Perform template matching on padded region (no resizing needed!)
             result = cv2.matchTemplate(region_padded, template_scaled, cv2.TM_CCOEFF_NORMED)
             
             # Find the best match for this scale
@@ -510,10 +552,10 @@ class LiveIconOverlay:
                     match_info = {
                         'x': actual_x,
                         'y': actual_y,
-                        'width': int(new_width),
-                        'height': int(new_height),
-                        'center_x': int(actual_x + new_width // 2),
-                        'center_y': int(actual_y + new_height // 2),
+                        'width': int(template_width),
+                        'height': int(template_height),
+                        'center_x': int(actual_x + template_width // 2),
+                        'center_y': int(actual_y + template_height // 2),
                         'confidence': float(confidence),
                         'scale': float(scale)
                     }
@@ -561,20 +603,16 @@ class LiveIconOverlay:
                 w, h = detection['width'], detection['height']
                 cx, cy = detection['center_x'], detection['center_y']
                 
-                display_x = x
-                display_y = top - 80 - (i * 60)
+                display_x = left + (i * 100)
+                display_y = top - 80
                 
-                if display_y < 50:
-                    display_y = top - 40
-                    display_x = left + (i * 120)
+                if display_y < 10:
+                    display_y = 10
                 
                 icon_size = 40
                 self.overlay_canvas.create_rectangle(display_x, display_y, 
                                                    display_x + icon_size, display_y + icon_size,
                                                    outline=color, width=3, fill=color, stipple='gray25')
-                
-                self.overlay_canvas.create_line(cx, cy, display_x + icon_size//2, display_y + icon_size,
-                                              fill=color, width=2, dash=(5, 5))
                 
                 label = f"{detection['icon_name']}\n{detection['confidence']:.2f}"
                 self.overlay_canvas.create_text(display_x + icon_size//2, display_y + icon_size + 5, 
@@ -586,9 +624,6 @@ class LiveIconOverlay:
                 self.overlay_canvas.create_text(display_x + icon_size//2, display_y + icon_size + 5, 
                                               text=label, fill='white', font=('Arial', 9, 'bold'),
                                               anchor='n')
-                
-                self.overlay_canvas.create_oval(cx-2, cy-2, cx+2, cy+2, 
-                                              fill=color, outline='white', width=1)
                                               
             except tk.TclError:
                 break
